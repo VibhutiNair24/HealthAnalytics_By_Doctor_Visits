@@ -30,3 +30,28 @@ Healthcare utilization patterns are critical for resource allocation and policy 
 ---
 
 ## 📁 Repository Structure
+├── data/
+│   └── Healthcare_Analytics_Doctor_Visits.csv
+├── notebooks/
+│   └── Healthcare_Analytics_Doctor_Visits.ipynb
+├── visualizations/
+│   ├── plot1_visit_distribution.png
+│   ├── plot5_illness_visits.png
+│   ├── plot11_age_gender_visits.png
+│   └── plot12_feature_importance.png
+├── presentation/
+│   └── Healthcare_Analytics_Doctor_Visits.pptx
+└── README.md
+
+
+---
+
+## 🚀 How to Run
+1. Clone this repository:
+   ```bash
+   git clone [https://github.com/your-username/healthcare-analytics-doctor-visits.git](https://github.com/your-username/healthcare-analytics-doctor-visits.git)
+Install required packages:
+
+Bash
+pip install pandas numpy matplotlib seaborn
+Launch Jupyter Notebook and run Healthcare_Analytics_Doctor_Visits.ipynb.
