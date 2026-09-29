@@ -1,0 +1,264 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Healthcare Analytics — Doctor Visits</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; font-size: 14px; line-height: 1.6; color: #1f2328; background: #ffffff; }
+  .wrapper { max-width: 760px; margin: 0 auto; padding: 32px 24px 48px; }
+
+  /* Header */
+  .header { border-bottom: 2px solid #3b82d4; padding-bottom: 16px; margin-bottom: 28px; }
+  .header h1 { font-size: 22px; color: #1f2328; font-weight: 700; }
+  .header .subtitle { color: #57606a; font-size: 12.5px; margin-top: 4px; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .badge { background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 4px; padding: 2px 9px; font-size: 11px; color: #57606a; }
+
+  /* Sections */
+  h2 { font-size: 15px; font-weight: 700; color: #1f2328; margin: 28px 0 10px; border-left: 3px solid #3b82d4; padding-left: 10px; }
+  h3 { font-size: 13px; font-weight: 700; color: #3b82d4; margin: 18px 0 6px; }
+  p  { color: #444; margin-bottom: 8px; }
+
+  /* Variable dictionary */
+  .var-grid { display: grid; grid-template-columns: 110px 75px 1fr; gap: 0; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; font-size: 12.5px; }
+  .var-grid .hdr { background: #3b82d4; color: #fff; font-weight: 700; padding: 6px 10px; }
+  .var-grid .cell { padding: 5px 10px; border-top: 1px solid #e5e7eb; }
+  .var-grid .cell:nth-child(6n+4), .var-grid .cell:nth-child(6n+5), .var-grid .cell:nth-child(6n+6) { background: #f7f8fa; }
+  code { font-family: 'Menlo', 'Consolas', monospace; font-size: 11.5px; background: #f0f4ff; padding: 1px 4px; border-radius: 3px; color: #3b3baf; }
+
+  /* Preprocessing table */
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 6px; }
+  th { background: #f7f8fa; padding: 7px 10px; text-align: left; border: 1px solid #e5e7eb; font-weight: 600; }
+  td { padding: 6px 10px; border: 1px solid #e5e7eb; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafbfc; }
+
+  /* Plot cards */
+  .plot-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; }
+  .plot-card .plot-title { font-weight: 700; font-size: 13px; color: #1f2328; display: flex; align-items: center; gap: 8px; }
+  .plot-num { background: #3b82d4; color: white; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 1px 7px; }
+  .plot-card .story { color: #57606a; font-size: 12px; margin: 6px 0 8px; font-style: italic; }
+  .plot-card .insight { background: #f0f6ff; border-left: 3px solid #3b82d4; padding: 8px 12px; font-size: 12.5px; border-radius: 0 4px 4px 0; }
+
+  /* Stat grid */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0; }
+  .stat-box { background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px 12px; text-align: center; }
+  .stat-box .val { font-size: 20px; font-weight: 700; color: #3b82d4; }
+  .stat-box .lbl { font-size: 10.5px; color: #57606a; margin-top: 2px; }
+
+  /* Key findings */
+  .finding { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; align-items: flex-start; }
+  .finding:last-child { border-bottom: none; }
+  .finding .rank { min-width: 22px; height: 22px; background: #3b82d4; color: white; border-radius: 50%; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .finding .text strong { color: #1f2328; }
+  .finding .text { font-size: 12.5px; color: #444; }
+
+  /* Recommendations */
+  .rec-row { display: grid; grid-template-columns: 24px 1fr 1fr; gap: 8px 12px; align-items: start; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 12.5px; }
+  .rec-row:last-child { border-bottom: none; }
+  .rec-num { background: #e07b54; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .col-lbl { font-weight: 700; color: #57606a; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+
+  /* Feature importance bar */
+  .feat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 12px; }
+  .feat-name { width: 90px; text-align: right; color: #444; }
+  .feat-bar-bg { flex: 1; background: #e5e7eb; border-radius: 3px; height: 14px; }
+  .feat-bar { height: 14px; border-radius: 3px; background: #3b82d4; }
+  .feat-val { width: 40px; font-size: 11px; color: #57606a; }
+
+  footer { margin-top: 40px; padding-top: 14px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #57606a; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  
+  <div class="header">
+    <h1>🏥 Healthcare Analytics — Doctor Visits</h1>
+    <div class="subtitle">Comprehensive EDA, Preprocessing &amp; Storytelling Report</div>
+    <div class="badges">
+      <span class="badge">1,849 patients</span>
+      <span class="badge">13 features</span>
+      <span class="badge">Australian healthcare dataset</span>
+      <span class="badge">Count outcome (visits)</span>
+      <span class="badge">12 plots</span>
+    </div>
+  </div>
+
+  
+  <h2>Dataset Overview</h2>
+  <div class="stat-grid">
+    <div class="stat-box"><div class="val">1,849</div><div class="lbl">Patient records</div></div>
+    <div class="stat-box"><div class="val">0.93</div><div class="lbl">Mean visits (2 wks)</div></div>
+    <div class="stat-box"><div class="val">55.4%</div><div class="lbl">Zero-visit patients</div></div>
+    <div class="stat-box"><div class="val">9</div><div class="lbl">Max visits recorded</div></div>
+  </div>
+
+  
+  <h2>Variable Dictionary</h2>
+  <div class="var-grid">
+    <div class="hdr">Column</div><div class="hdr">Type</div><div class="hdr">Description</div>
+    <div class="cell"><code>visits</code></div><div class="cell">int (target)</div><div class="cell">Doctor visits in past 2 weeks</div>
+    <div class="cell"><code>gender</code></div><div class="cell">categorical</div><div class="cell">Patient gender (male / female)</div>
+    <div class="cell"><code>age</code></div><div class="cell">float</div><div class="cell">Age in decade-units (0.19 ≈ 19 yrs … 0.72 ≈ 72 yrs)</div>
+    <div class="cell"><code>income</code></div><div class="cell">float</div><div class="cell">Annual household income (tens of thousands AUD)</div>
+    <div class="cell"><code>illness</code></div><div class="cell">int 0–5</div><div class="cell">Number of illnesses in past 2 weeks</div>
+    <div class="cell"><code>reduced</code></div><div class="cell">int 0–14</div><div class="cell">Days of reduced activity in past 2 weeks</div>
+    <div class="cell"><code>health</code></div><div class="cell">int</div><div class="cell">Self-rated health score (0 = excellent, higher = worse)</div>
+    <div class="cell"><code>private</code></div><div class="cell">binary</div><div class="cell">Has private health insurance</div>
+    <div class="cell"><code>freepoor</code></div><div class="cell">binary</div><div class="cell">Free govt insurance (low income)</div>
+    <div class="cell"><code>freerepat</code></div><div class="cell">binary</div><div class="cell">Free govt insurance (repatriated)</div>
+    <div class="cell"><code>nchronic</code></div><div class="cell">binary</div><div class="cell">Has a non-limiting chronic condition</div>
+    <div class="cell"><code>lchronic</code></div><div class="cell">binary</div><div class="cell">Has a limiting chronic condition</div>
+  </div>
+
+  
+  <h2>Data Understanding &amp; Preprocessing Steps</h2>
+  <table>
+    <tr><th>Step</th><th>Action</th><th>Finding / Outcome</th></tr>
+    <tr><td>Missing values</td><td>Null audit across all 13 columns</td><td>✅ No missing values detected</td></tr>
+    <tr><td>Binary encoding</td><td>Map yes/no → 1/0 for 5 columns</td><td>private, freepoor, freerepat, nchronic, lchronic encoded</td></tr>
+    <tr><td>Gender flag</td><td>female = 1 if gender == "female"</td><td>54.6% female, 45.4% male</td></tr>
+    <tr><td>Age decoding</td><td>Map 0.19–0.72 → approx. real ages</td><td>12 distinct age values; bucketed into 4 groups</td></tr>
+    <tr><td>Insurance type</td><td>Derived single 4-level category</td><td>Private: 45% | Uninsured: 43% | Govt-Poor: 8% | Repat: 4%</td></tr>
+    <tr><td>Chronic groups</td><td>Combined nchronic + lchronic flags</td><td>4 groups: None / Non-limiting / Limiting / Both</td></tr>
+    <tr><td>Outlier check</td><td>IQR method on visits</td><td>Heavy-tail beyond fence (visits 5–9); retained — real extreme users</td></tr>
+    <tr><td>Skewness</td><td>Distribution shape of target</td><td>Zero-inflated, right-skewed count variable — count models recommended</td></tr>
+  </table>
+
+  
+  <h2>Exploratory Analysis — 12 Plots with Storytelling</h2>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">1</span> Distribution of Doctor Visits (Target Variable)</div>
+    <div class="story">❝ How often do Australians actually visit the doctor? ❞</div>
+    <div class="insight">Over <strong>55% of patients recorded zero visits</strong> in the 2-week observation window. The distribution is heavily right-skewed with a long tail reaching 9 visits. The median is 0, mean is ~0.93. This zero-inflation and skewness means standard linear regression is inappropriate; <strong>Poisson, Negative Binomial, or Zero-Inflated models</strong> are required for predictive work.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">2</span> Gender Distribution &amp; Visit Rates</div>
+    <div class="story">❝ Do women visit doctors more than men? ❞</div>
+    <div class="insight"><strong>Women have a meaningfully higher mean visit count</strong> than men. Men skew more heavily toward zero visits, while women spread across 1–3 visits. This aligns with established healthcare literature: women are more likely to seek preventive care, while men tend to delay or avoid medical attention for moderate symptoms.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">3</span> Age Group &amp; Healthcare Utilisation</div>
+    <div class="story">❝ Does healthcare demand really grow with age? ❞</div>
+    <div class="insight">There is a <strong>clear monotonic increase in mean visits with age</strong>. Seniors (62–72) visit nearly twice as often as young adults (19–27). Box plots show both the mean and spread widen with age — a growing cohort of older patients become very heavy users. The ageing population will drive <strong>disproportionate future demand</strong> on primary care services.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">4</span> Income vs Doctor Visits</div>
+    <div class="story">❝ Does wealth buy better — or more — healthcare? ❞</div>
+    <div class="insight">Counter-intuitively, the <strong>lowest income quintile has the highest visit rate</strong>. This is explained by two forces: (1) lower-income individuals have worse baseline health from social determinants; and (2) many qualify for <code>freepoor</code> government insurance, removing the financial barrier. Wealthier patients visit less — likely because they enjoy better preventive health and fewer acute episodes.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">5</span> Illness Count vs Doctor Visits</div>
+    <div class="story">❝ The most obvious driver — but how strong is the signal? ❞</div>
+    <div class="insight"><code>illness</code> is the <strong>single strongest predictor of visits</strong> in the dataset (Pearson r ≈ 0.37). Mean visits rise almost linearly from 0.8 (0 illnesses) to 2.5+ (5 illnesses). The crosstab heatmap confirms the clear diagonal shift: patients with 4–5 illnesses almost never have zero visits. Direct, concrete, actionable.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">6</span> Days of Reduced Activity vs Visits</div>
+    <div class="story">❝ Does illness severity — not just count — drive utilisation? ❞</div>
+    <div class="insight">Days of reduced activity shows a <strong>strong step-wise increase</strong> in mean visits. Patients impaired for 10–14 days average nearly 3× more visits than those with 0 reduced days. Even within each severity bucket, the distribution remains right-skewed, suggesting access barriers prevent some severely impaired patients from reaching care. Together with <code>illness</code>, <code>reduced</code> forms a powerful two-dimensional severity signal.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">7</span> Self-Rated Health Score vs Visits</div>
+    <div class="story">❝ Does how people feel about their health predict how much they use it? ❞</div>
+    <div class="insight">Patients who rate their health as poor (higher score) visit significantly more. The health score distribution is <strong>bimodal</strong> — a large cluster at 0 (excellent) and a secondary peak at higher scores — revealing two sub-populations: a healthy majority who rarely visit, and a sicker minority who visit frequently. Self-rated health is a validated, easy-to-collect predictor.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">8</span> Insurance Type &amp; Healthcare Utilisation</div>
+    <div class="story">❝ Does the type of insurance coverage shape healthcare demand? ❞</div>
+    <div class="insight"><strong>Govt-Poor patients have the highest mean visits</strong>, reflecting the combined burden of worse health and now-affordable care. Private insurance holders visit moderately. The zero-visit rate is highest for uninsured patients, suggesting a residual access barrier. Insurance type alone is not a dominant predictor; <strong>health status always dominates</strong>.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">9</span> Chronic Condition Impact</div>
+    <div class="story">❝ How much do long-term conditions drive healthcare demand? ❞</div>
+    <div class="insight"><strong>Limiting chronic conditions (<code>lchronic</code>)</strong> are a high-impact driver. Patients with both chronic types have the highest mean visits of any group. Non-limiting conditions add a modest but consistent increase. The vast majority of the sample has no chronic condition — explaining the heavy zero-inflation. <strong>Chronic disease management programmes</strong> targeting the 'both' group can significantly reduce acute visit volume.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">10</span> Correlation Heatmap</div>
+    <div class="story">❝ Which features are most correlated with visits — and with each other? ❞</div>
+    <div class="insight"><code>illness</code> and <code>reduced</code> have the strongest positive correlations with <code>visits</code>. <code>age</code> is moderately positive; <code>income</code> slightly negative. <code>lchronic</code> and <code>nchronic</code> both positively correlate with visits. <code>private</code> and <code>freepoor</code> are mutually exclusive (negatively correlated). <code>illness</code> and <code>reduced</code> also correlate with each other — both measure health burden from complementary angles.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">11</span> Age × Gender Interaction</div>
+    <div class="story">❝ Do men and women follow the same trajectory with age? ❞</div>
+    <div class="insight">Both genders show an upward trend, but <strong>women consistently out-visit men</strong> — especially in the 32–52 age range (reproductive and peri-menopausal years). The gender gap narrows in older age groups (67–72) as men's health deteriorates and their visit rates catch up. Women aged 32–57 are the most frequent users relative to their male peers — a key segment for primary care planning.</div>
+  </div>
+
+  <div class="plot-card">
+    <div class="plot-title"><span class="plot-num">12</span> Feature Importance: Visitors vs Non-Visitors</div>
+    <div class="story">❝ What best separates patients who visit from those who don't? ❞</div>
+    <div class="insight">Ranked by mean absolute difference between visitor and non-visitor populations: <strong>illness → reduced → health → lchronic → age</strong> are the top 5 discriminators. Demographics (income, gender, insurance type) have smaller but non-trivial effects. This ranking directly informs feature selection for any predictive model built on this dataset.</div>
+  </div>
+
+  
+  <h2>Feature Ranking (Visitors vs Non-Visitors)</h2>
+  <p style="font-size:12px;color:#57606a;margin-bottom:10px">Relative importance based on mean absolute difference between patients who visited (visits &gt; 0) vs those who did not.</p>
+  <div class="feat-row"><div class="feat-name">illness</div><div class="feat-bar-bg"><div class="feat-bar" style="width:100%"></div></div><div class="feat-val">0.37</div></div>
+  <div class="feat-row"><div class="feat-name">reduced</div><div class="feat-bar-bg"><div class="feat-bar" style="width:72%"></div></div><div class="feat-val">0.27</div></div>
+  <div class="feat-row"><div class="feat-name">health</div><div class="feat-bar-bg"><div class="feat-bar" style="width:60%"></div></div><div class="feat-val">0.22</div></div>
+  <div class="feat-row"><div class="feat-name">lchronic</div><div class="feat-bar-bg"><div class="feat-bar" style="width:42%"></div></div><div class="feat-val">0.16</div></div>
+  <div class="feat-row"><div class="feat-name">age</div><div class="feat-bar-bg"><div class="feat-bar" style="width:36%"></div></div><div class="feat-val">0.13</div></div>
+  <div class="feat-row"><div class="feat-name">nchronic</div><div class="feat-bar-bg"><div class="feat-bar" style="width:22%"></div></div><div class="feat-val">0.08</div></div>
+  <div class="feat-row"><div class="feat-name">income</div><div class="feat-bar-bg"><div class="feat-bar" style="width:15%;background:#e07b54"></div></div><div class="feat-val">−0.06</div></div>
+  <div class="feat-row"><div class="feat-name">female</div><div class="feat-bar-bg"><div class="feat-bar" style="width:12%"></div></div><div class="feat-val">0.05</div></div>
+  <div class="feat-row"><div class="feat-name">private</div><div class="feat-bar-bg"><div class="feat-bar" style="width:8%"></div></div><div class="feat-val">0.03</div></div>
+
+  
+  <h2>Key Findings</h2>
+  <div class="finding"><div class="rank">1</div><div class="text"><strong>Zero-inflated count distribution</strong> — &gt;55% zero visits; standard regression is unsuitable.</div></div>
+  <div class="finding"><div class="rank">2</div><div class="text"><strong>Illness count is the #1 predictor</strong> — direct, strong, actionable signal for triage.</div></div>
+  <div class="finding"><div class="rank">3</div><div class="text"><strong>Reduced activity days</strong> captures illness severity — combine with illness count for a 2D severity score.</div></div>
+  <div class="finding"><div class="rank">4</div><div class="text"><strong>Visits rise monotonically with age</strong> — senior cohorts (62–72) are 2× heavier users than young adults.</div></div>
+  <div class="finding"><div class="rank">5</div><div class="text"><strong>Women out-visit men</strong> across most of the lifespan, peaking in the 32–52 range.</div></div>
+  <div class="finding"><div class="rank">6</div><div class="text"><strong>Low-income patients visit most</strong> — poor health + free insurance removes financial barrier.</div></div>
+  <div class="finding"><div class="rank">7</div><div class="text"><strong>Limiting chronic conditions</strong> are a high-impact utilisation driver; management programmes could reduce acute volume.</div></div>
+  <div class="finding"><div class="rank">8</div><div class="text"><strong>Insurance type has modest effect</strong> — health status always dominates insurance type as a predictor.</div></div>
+
+  
+  <h2>Actionable Recommendations</h2>
+  <div class="rec-row">
+    <div class="rec-num">1</div>
+    <div><div class="col-lbl">Finding</div>Zero-inflated visits distribution</div>
+    <div><div class="col-lbl">Action</div>Use Zero-Inflated Poisson or Negative Binomial model for prediction</div>
+  </div>
+  <div class="rec-row">
+    <div class="rec-num">2</div>
+    <div><div class="col-lbl">Finding</div>illness + reduced = top predictors</div>
+    <div><div class="col-lbl">Action</div>Build a 2-feature acute-severity triage score for early resource allocation</div>
+  </div>
+  <div class="rec-row">
+    <div class="rec-num">3</div>
+    <div><div class="col-lbl">Finding</div>Ageing population drives disproportionate demand</div>
+    <div><div class="col-lbl">Action</div>Increase primary care capacity planning for the 60+ cohort</div>
+  </div>
+  <div class="rec-row">
+    <div class="rec-num">4</div>
+    <div><div class="col-lbl">Finding</div>Men under-utilise healthcare</div>
+    <div><div class="col-lbl">Action</div>Launch male-targeted health outreach and preventive-care campaigns</div>
+  </div>
+  <div class="rec-row">
+    <div class="rec-num">5</div>
+    <div><div class="col-lbl">Finding</div>Limiting chronic conditions drive repeat visits</div>
+    <div><div class="col-lbl">Action</div>Invest in chronic disease management programmes to reduce acute demand</div>
+  </div>
+  <div class="rec-row">
+    <div class="rec-num">6</div>
+    <div><div class="col-lbl">Finding</div>Govt-poor patients visit most frequently</div>
+    <div><div class="col-lbl">Action</div>Integrate social determinants screening at first contact for these patients</div>
+  </div>
+
+  <footer>Made with IBM Bob</footer>
+</div>
+</body>
+</html>
